@@ -367,3 +367,85 @@ greet2('Yo')('Chrissy');
 
 // NOTES
 // THE CALL AND APPLY METHODS
+// Using the 'this' keyword and setting it manually.
+
+console.log('=======================================');
+
+// We can write an airline object with an interal function that makes use of the 'this' keyword to get the data it needs from the object itself.
+const lufthansa = {
+  airline: 'Lufthansa',
+  iataCode: 'LH',
+  bookings: [],
+  book(flightNumber, passengerName) {
+    console.log(
+      `${passengerName} booked a seat on ${this.airline} flight ${this.iataCode}, ${flightNumber}`
+    );
+    this.bookings.push({
+      flight: `${this.iataCode} ${flightNumber}`,
+      passengerName,
+    });
+  },
+};
+
+// We call the function by dot-indexing it as a property of the object with the required arguments.
+lufthansa.book(239, 'Michael McCann');
+lufthansa.book(681, 'John Smith');
+console.log(lufthansa.bookings);
+
+// We can capture the function we wrote in the lufthansa object and assign it to a variable to avoid having to copy paste it or write it again.
+const book = lufthansa.book;
+
+// Then we can define this variable as a property of another object and we will then be able to call this function on this object.
+const eurowings = {
+  airline: 'Eurowings',
+  iataCode: 'EW',
+  bookings: [],
+  book,
+};
+
+// However, if we tried to just call the function by itself it would not work, this is because the function is using this keyword calls, and it has no associated object to call this on. If we had variables of the same name in the global scope it could still work, but this is unlikely to be the behaviour that we want.
+// book(996, 'Sarah Kerrigan');
+
+// Again, we have to call it by dot-indexing it on the object.
+eurowings.book(881, 'James Raynor');
+console.log(eurowings.bookings);
+
+// Another way of thinking about this is that we are telling the function what the 'this' keyword should mean. We provide the object that will be the subject of the 'this' keyword.
+
+// There are also three other ways to manually tell the JavaScript engine what the 'this' keyword means, three function methods called '.call()', '.apply()', and '.bind()'.
+
+// CALL '.call()'
+// We use '.call()' after the function name, then in the parentheses, the first argument is the object we want to call the function on, then we provide the other arguments that the function needs to run.
+book.call(lufthansa, 885, 'Egon Stettman');
+book.call(eurowings, 132, 'Arcturus Mengsk');
+
+console.log(lufthansa.bookings);
+console.log(eurowings.bookings);
+
+// '.call()' allows things to be a bit more flexible, the function could be called on any object that has the right data for it to work. We don't need to call the function as a property of the object, rather we are setting the object to use as the first argument of the call method.
+
+// We could make any number of other compatible objects and then easily use the function using '.call()'.
+const swiss = {
+  airline: 'Swiss Airlines',
+  iataCode: 'LX',
+  bookings: [],
+  book,
+};
+
+book.call(swiss, 854, 'Rory Swann');
+console.log(swiss.bookings);
+
+// APPLY '.apply()'
+// The .apply()' method does the same thing as the '.call()' method, but it takes in an array of the arguments, rather than comma seperated arguments.
+const flightData = [583, 'George Cooper'];
+
+// The first argument is the object to call the function on, the same as '.call()', but the second argument is the array of arguments that the function needs.
+book.apply(swiss, flightData);
+console.log(swiss.bookings);
+
+// '.apply()' is considered a little old and clunky now, and isn't commonly used in JavaScript, usually if people need this functionality of reading an array as arguments they will just use the spread operator to split out the values from an array as part of the function call. This does exactly the same thing but is considered more modern.
+book.call(swiss, ...flightData);
+console.log(swiss.bookings);
+
+// NOTES
+// THE BIND METHOD '.bind()'
