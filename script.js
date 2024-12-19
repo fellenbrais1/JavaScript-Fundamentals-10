@@ -360,9 +360,10 @@ greet('Hello')('Sarah');
 
 // This looks a bit weird, but it does work.
 
-// This is the same greet function and its returned function written as only arrow functions, this looks a little confusing, but still works just the same for a much-reduced amount of code.
-const greet2 = greeting => {
-  return name => console.log(`${greeting}, ${name}`);
-};
+// This is the same greet function and its returned function written as only arrow functions, this looks a little confusing, but still works just the same for a much-reduced amount of code. Some people think this is a lot more confusing andtend to use the more traditional method as above.
+const greet2 = greeting => name => console.log(`${greeting}, ${name}`);
 
 greet2('Yo')('Chrissy');
+
+// NOTES
+// THE CALL AND APPLY METHODS
