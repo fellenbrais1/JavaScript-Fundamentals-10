@@ -449,3 +449,219 @@ console.log(swiss.bookings);
 
 // NOTES
 // THE BIND METHOD '.bind()'
+
+// The '.bind()' also allows us to maunally set the 'this' keyword for any function call, the difference is that '.bind()' does not immediately call the function, it returns a new function where the 'this' keyword is bound.
+
+// The below code is how we used the .call() function method.
+book.call(eurowings, 23, 'Sarah Williams');
+console.log(eurowings.bookings);
+
+// This will not call the book function, it will return a new function where the 'this' keyword will always be set to 'eurowings'. We can bind this to a variable and then call this whenver we need it.
+const bookEuroWings = book.bind(eurowings);
+
+// Because the 'this' keyword has already been set to something when we first use the '.bind()' method, we don't need to specify this within the parentheses.
+bookEuroWings(24, 'Rachel McAdams');
+console.log(eurowings.bookings);
+
+// This allows us to make a specific function only for this object that we can call upon whenever we want. It ultimately acheives the same goal, but has its specific uses.
+
+// We could create specific functions for all of the other airlines if we wanted to. This can be a little easier than using the '.call()' all the time.
+const bookLuftHansa = book.bind(lufthansa);
+const bookSwiss = book.bind(swiss);
+
+bookLuftHansa(48, 'Jiminy Cricket');
+console.log(lufthansa.bookings);
+
+bookSwiss(999, 'Tom Riddle');
+console.log(swiss.bookings);
+
+// We could also use '.bind()' to lock in arguments that we feed into the function. For example, we could make it so that the function always books a certain kind of flight for example.
+
+// To do this, we also feed in some of the arguments that we want to be automatically fed into the function in additional to what the 'this' keyword should equate to.
+const bookEuroWings48 = book.bind(eurowings, 48);
+
+// When we call this function, the flight number of 23 is already passed in, so we only have to pass in the name for it to work.
+bookEuroWings48('John Smithe');
+bookEuroWings48('Martha Cooper');
+console.log(eurowings.bookings);
+
+// Specifying some of the arguments beforehand is a common practice to save time and labour, and is called 'partial application'.
+
+// A common application of the '.bind()' method is when using functions and event listeners together.
+
+lufthansa.planes = 300;
+lufthansa.buyPlane = function () {
+  console.log(this);
+  this.planes++;
+  console.log(this.planes);
+};
+
+// In an eventhandler function, the 'this' keyword always points to the element that the function is attached to, we don't want that in this situation, so we have to bind the 'this' keyword to 'lufthansa' to get the behaviour we want.
+document
+  .querySelector('.buy')
+  .addEventListener('click', lufthansa.buyPlane.bind(lufthansa));
+
+// Partial application is another big usecase for the '.bind()' method.
+
+// We could create a standard function to add tax to a purchase amount, but we might also need more specific functions for fized tax rates in different countries etc, to do this we could use the '.bind()' method to present some of the values via partial application.
+const addTax = (rate, value) => value + value * rate;
+console.log(addTax(0.1, 200));
+
+// If we are not interesting in what the 'this' keyword should point to, in this case it isn't even used in the function, we can set it to 'null' as seen here.
+const addVAT = addTax.bind(null, 0.175);
+console.log(addVAT(200));
+
+// The order of the arguments when using partial application is important, therefore, we should put something we want to change as the first argument of a function.
+
+// Of course, we could do all of this using default values on a function as well, but .bind() gives us the ability to dynamically create custom functions when we want to using partial application.
+
+// To create a similar function without using the '.bind()' method we could create a function that takes in just the rate which returns another function we can specify the value with, this effectively creates a custom function for our tax purposes much in the sam way as we did before.
+
+// This is my first attempt.
+function createFunc(rate = 0.1) {
+  const vatTax = function (value) {
+    console.log(rate, value);
+    const finalAmount = value + value * rate;
+    return finalAmount;
+  };
+  return vatTax;
+}
+
+// We create a custom function by supplying the rate first of all.
+const addVAT2 = createFunc(0.55);
+// Then we can call this custom function by supplying the tax amount.
+console.log(addVAT2(12500));
+
+// This is a cleaner attempt after watching the tutorial to the end of the section.
+const addTaxrate = function (rate) {
+  return function (value) {
+    return value + value * rate;
+  };
+};
+
+const addVAT3 = addTaxrate(0.23);
+console.log(addVAT3(100));
+
+// We could also chain call this inner function as well like so.
+console.log(addTaxrate(0.175)(5000));
+
+// NOTES
+// CHALLENGE 1
+// Builing a simple poll using some of the methods we have learnt so far.
+
+// My first blind attempt
+const poll = {
+  question: 'What is your favourite programming language?',
+  options: ['1: JavaScript', '2: Python', '3: Rust', '4: C++'],
+  // This creates a new array of 4 elements in length, with all elements filled with the value 0
+  answers: new Array(4).fill(0),
+};
+
+function registerNewAnswer() {
+  // Defining a tabSize variable that can be used to influence the amount of spacing in a string.
+  const tabSize = 6;
+
+  let promptMessage = '';
+  const paddedQuestion = ' '.repeat(tabSize) + poll.question;
+  promptMessage += paddedQuestion;
+  promptMessage += '\n';
+  console.log(paddedQuestion);
+
+  poll.options.forEach(element => {
+    const paddedOption = ' '.repeat(tabSize) + element;
+    console.log(paddedOption);
+    promptMessage += paddedOption;
+    promptMessage += '\n';
+  });
+
+  const userAnswer = Number(prompt(promptMessage));
+  console.log(typeof userAnswer, userAnswer);
+  if (
+    userAnswer !== 1 &&
+    userAnswer !== 2 &&
+    userAnswer !== 3 &&
+    userAnswer !== 4
+  ) {
+    [alert('Please enter one of the valid answers')];
+  } else {
+    console.log(userAnswer);
+    poll.answers[userAnswer - 1]++;
+    displayResults();
+  }
+}
+
+function displayResults() {
+  const tabSize = 6;
+  const maxOptionLength = Math.max(
+    ...poll.options.map(option => option.length)
+  );
+  let alertMessage = '';
+
+  poll.options.forEach((element, index) => {
+    const padding = ' '.repeat(maxOptionLength - element.length + tabSize);
+    const paddedOption =
+      ' '.repeat(tabSize) + element + ': ' + padding + poll.answers[index];
+    alertMessage += paddedOption;
+    alertMessage += '\n';
+  });
+  alert(alertMessage);
+}
+
+// Commented out so the second example can be run on the webpage.
+// document.querySelector('.poll').addEventListener('click', registerNewAnswer);
+
+// Second attempt after following the challenge lecture's advice.
+const poll2 = {
+  question: 'What is your favourite cheese?',
+  options: ['1: Camembert', '2: Cheddar', '3: Emmental', '4: Red Leicester'],
+  answers: new Array(4).fill(0),
+
+  // Adding the function as part of the object, this means that the 'this' keyword will point to this object, allowing us to access data from this object.
+  registerNewAnswer2() {
+    const answer = Number(
+      prompt(
+        `${this.question}\n${this.options.join('\n')}\n(Write option number)`
+      )
+    );
+    console.log(answer);
+
+    // Using short-circuiting to handle this next part, if any of the conditions before the incrementation is false then the and operator will short-circuit and the incrementation at the end will not happen.
+    typeof answer === 'number' &&
+      answer < this.answers.length + 1 &&
+      answer !== 0 &&
+      this.answers[answer - 1]++;
+
+    // Testing out the displayResults function both with the default type of 'array' and the specified type of 'string'.
+    console.log(this.answers);
+    this.displayResults();
+    this.displayResults('string');
+  },
+
+  // Another function included within the object that will display the results by default as a simple console.log or as a string if that is specified in the 'type' argument.
+  displayResults(type = 'array') {
+    if (type === 'array') {
+      console.log(this.answers);
+    } else if (type === 'string') {
+      console.log(`Poll results are ${this.answers.join(', ')}`);
+    }
+  },
+};
+
+// Adding the function to a button click on the webpage.
+document
+  .querySelector('.poll')
+  .addEventListener('click', poll2.registerNewAnswer2.bind(poll2));
+
+// We can repurpose the displayResults function inside the poll2 object but using the '.call()' method to set a different 'this' keyword.
+const testData1 = [5, 2, 3];
+const testData2 = [1, 5, 3, 9, 6, 1];
+
+// However, the function is looking for 'this.answers' which will never work unless we create a new object with an answers property. We can feed the values of the test arrays into this object by using the spread operator.
+poll2.displayResults.call({ answers: [...testData1] });
+poll2.displayResults.call({ answers: [...testData1] }, 'string');
+
+poll2.displayResults.call({ answers: [...testData2] });
+poll2.displayResults.call({ answers: [...testData2] }, 'string');
+
+// NOTES
+// IMMEDIATELY INVOKED FUNCTION EXPRESSIONS IIFES
