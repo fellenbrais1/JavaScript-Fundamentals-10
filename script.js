@@ -664,4 +664,178 @@ poll2.displayResults.call({ answers: [...testData2] });
 poll2.displayResults.call({ answers: [...testData2] }, 'string');
 
 // NOTES
-// IMMEDIATELY INVOKED FUNCTION EXPRESSIONS IIFES
+// IMMEDIATELY INVOKED FUNCTION EXPRESSIONS (IIFES)
+
+// Sometimes we want to create a function but only have it run once straight away, and then never again.
+
+// IIFES are functions that dissapear once being called once.
+
+// We could create a function like this and then just run it once, but the point of IIFE's is that we don't even want to have them assigned to a variable at all.
+const runOnce = function () {
+  console.log(`This will never run again`);
+};
+
+runOnce();
+
+// We could define a function without assigning it to a variable, but this will raise an error at first. We solve the error by wrapping the whole thing in parentheses to make it into an expression.
+(function () {
+  console.log(`This will never run again`);
+})();
+
+// To immediately call the function we place a pair of parentheses directly after the expression. This calls the function straight away and executes the code without the function being added to any variables and memory outside of its immediate execution context.
+
+// The same would also work for an arrow function. Notice that to get it to be called instantly we also need to put the pair of parentheses after the expression.
+(() => console.log(`This will never run again`))();
+
+// It also works if the function takes arguments, we can just define the arguments in the parentheses after the expression to instantly invoke the function with those arugments.
+(number => console.log(number * 2))(4);
+
+// But what is the point of IIFEs?
+// Functions create scopes, one scope does not have access to any variables within an inner scope. The scope chain only runs upwards through layers of scopes.
+
+// Data defined inside a scope is private to the scope and is encapsulated inside the scope that created it. It is important to know that variables are private and protected from being overwritten by other parts of the program or by external scripts and libraries.
+
+// Scopes are a good tool for protecting variables. IIFEs allow us to protect the variables that a scope uses by making the scope run and then be deleted immediately afterwards.
+
+// The variable declared in the below scope is private to the scope and encapsulated within it.
+// {
+//   const isPrivate = 23;
+// }
+
+// If we try to access thius variable outside of the scope we cannot use it at all, as it is private and encapsulated.
+// console.log(isPrivate);
+
+// IIFEs are available to use but are not actually that useful, much like we can use var to defined variables in a way that they are not private to a scope, IIFEs can help us in the other way, by only allowing a variable to be used within a specific scope and then discarded immediately afterwards, therefore being immune from being manipulated.
+
+// NOTES
+// CLOSURES
+
+// Closures are often cited as the hardest JavaScript concept to understand. Clousures bring a lot of the concepts we have already studied together.
+
+// Closures are not features that we explicity create and use, they just happen automatically in certain situations.
+
+// The function is called secureBooking as it cannot be manipulated from outside of its scope, making the value of the variable within secure.
+const secureBooking = function () {
+  let passengerCount = 0;
+
+  return function () {
+    passengerCount++;
+    console.log(`${passengerCount} passengers`);
+  };
+};
+
+console.log(`====================================`);
+
+// Before the below line of code is executed, we are running within the global EC. When the 'secureBooking()' function is called, a new EC is created on the stack that contains the 'passengerCount' variable. When the function is returned, a new variable called 'booker' is created within the global EC. Once the 'secureBooking()' function has done its job, its EC will be popped off the stack, but the variable environment for 'passengerCount' variable still lives on in the engine's memory, specifically in the heap now instead of the stack. This means that even though the EC for the function is popped off the stack, we can still manipulate this created variable.
+const booker = secureBooking();
+
+// If we call 'booker()' multiple times we can see the value of 'passengerCount' can still be incremented. The variable's value can still be manipulated. However, it can only be manipulated through 'booker()', as the variable does not exist on the stack, but in memory, with 'booker()' being our reference to its location.
+booker();
+booker();
+booker();
+
+// Closures allow this kind of behaviour to happen. Closures make a function remember all of the variables that were created in its birthplace at the time of its creation.
+
+// Usually variables are deleted via garbage collection when they are no longer reachable, but if a closure can still reach a variable, it will persist in memory indefinitely. The engine moves the variable environment to the heap in the case of closures so that these variables can be 'remembered' by functions that need them later.
+
+// When we invoke 'booker()' it has its own EC created on the stack, this will be empty of all variables. The scope chain doesn't explain how this EC can access the passengerCount variable as it is not connected to the global EC in the scope chain.
+
+// When 'booker()' was created, it is granted access to the variable environment containing 'passengerCount', just as it was when the function was first created. It is connected directly to the appropriate VE on the heap. This is what is called a CLOSURE.
+
+// In summary:
+// A function has access to the VE of the EC in which it was created.
+// Closure: VE attached to the function, exactly as it was at the time and place the function was created.
+// This attached VE is sometimes known as a 'closed over' VE, hence the term closures.
+// Thanks to a closure, a function does not lose access to variables that were created at the place and time of its birth.
+// If a variable a function needs cannot be immediately found, the JavaScript engine will prioritise looking in any closures attached the function to find that variable, then looking at the scope chain after that.
+
+// Definitions from very formal to casual.
+// A closure is the closed-ver variable environment of the execution content in which a function was created, even after that execution context is gone.
+
+// A closure gives a function access to all the variables of its parent function, even after that parent function has returned. The function keeps a reference to its outer scope, which preserves the scope chain throughout time.
+
+// A closure makes sure that a function doesn't lose connection to the variables that existed at the function's birth place.
+
+// A closure is like a backpack that a function carries around wherever it goes. This backpack has all the variables that were present in the environment where the function was created.
+
+// IMPORTANT POINT
+// We do not have to manually create closures, this is a JavaScript function the happens automatically. We can't even access closed-over variables explicitly. A closure is not a tangiable JavaScript object.
+
+// We can take a look at this internal property of a variable, to see what is in there.
+
+// Using console.dir() allows us to look into the internal properties of a function. We can click into the 'scopes' tab and see what variables etc are accessible by the function. We can see things in this output surrounded by double brackets [[]] which denotes that these are internal properties that cannot be manipulated explicitly.
+console.dir(booker);
+
+// NOTES
+// MORE CLOSURE EXAMPLES
+
+// We don't need to return a function from a function in order for a closure to be created, it is an inherent process and actually can happen with all functions if the variable environment has its execution context deleted where the variables might still be useful.
+
+// EXAMPLE 1
+let f;
+
+const g = function () {
+  const a = 23;
+  f = function () {
+    console.log(`a times 2 is ${a * 2}`);
+  };
+};
+
+// Function g creates a function called f, which we can then call after it has been created. The value of f as as a function is assigned to the f variable we defined earlier, and it can use the variable a, even though the EC of g is no longer in operation. The function f has inherited all variables it needs at the time and place of its creation in g via a closure. f has access to the variable a, even when called outside of g. This works even though a is not actually defined anywhere within f. f closed over the variable environment of the g function, which includes a.
+
+g();
+f();
+
+const h = function () {
+  const b = 777;
+  f = function () {
+    console.log(`b times 2 is ${b * 2}`);
+  };
+};
+
+// Reassigning the f function, when it is recreated it closes over the new EC and VE where it was recreated, which now means that it has access to the variable b instead of a, which has been forgotten by f.
+h();
+f();
+
+// When we reassign functions, even without returning them, a new closure will be created, which will potentially change what the function has access to.
+
+// EXAMPLE 2
+const boardPassengers = function (number, wait) {
+  const perGroup = number / 3;
+
+  // We can set a timer by specifying setTimeout(), it takes two arguments, a function to be executed, and then a time in milliseconds before it is run. This callback function is being used independently from the boardPassengers function, which shows us that thete is a closure being created so that this function has access to the variables it needs.
+  setTimeout(function () {
+    console.log(`We are now boarding all ${number} passengers.`);
+    console.log(`There are three groups each with ${perGroup} passengers`);
+  }, wait * 1000);
+
+  console.log(`Will start boarding in ${wait} seconds.`);
+};
+
+setTimeout(function () {
+  console.log(`TIMER STARTED`);
+}, 1000);
+
+boardPassengers(180, 3);
+
+// Closures have priority over the scope chain. If there is a variable in the closure with the same name as a variable in the scope chain, the function will use the variable saved in the closure over the other one.
+
+// NOTES
+// CHALLENGE 2
+// Take an IIFE defined below and at the end of the function attach an event listener that changes the colour of the header element to blue each time the body is clicked. We have to do this without selecting the h1 element again. This is to demonstate what is happening when closures are involved.
+
+console.log(`===============================`);
+
+(function () {
+  const header = document.querySelector('h1');
+  header.style.color = 'red';
+  // Added code
+  const alpha = function () {
+    header.style.color = 'blue';
+  };
+  document.querySelector('body').addEventListener('click', alpha);
+  // End of added code
+})();
+
+// EXPLANATION
+// When the IIFE is executed, the final line is run straight away, so the eventListener is added to the body of the page, the internal function alpha is defined and this is run to execute on the click. alpha changes the header based on the const header. This variable is closed over by alpha at the time of its execution, so even once the IIFE has been excecuted and deleted, alpha can still have access to this variable in order to carry out its tasks. The IIFE is the birthplace of the function alpha.
